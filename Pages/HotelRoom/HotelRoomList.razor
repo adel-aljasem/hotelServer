@@ -1,0 +1,107 @@
+﻿@page "/hotel-room"
+@using Models
+@using Business.Repository.IRepository
+@inject IHotelRoomRepository HotelRoomRepositroy
+@inject IJSRuntime jsRuntime
+@inject Service.IService.IFileUpload FileUpload
+@inject NavigationManager Nav
+@attribute [Authorize(Roles =Common.SD.Role_Admin)]
+
+
+<div class="row mt-4">
+    <div class="col-8">
+        <h4 class="card-title text-info"> Hotel room</h4>
+    </div>
+    <div class="col-3 offset-1">
+        <NavLink href="hotel-room/create" class="btn btn-info form-control"> Add new room</NavLink>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Occupancy</th>
+                    <th>Rate</th>
+                    <th>Sqft</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (HotelRooms.Any())
+                {
+                    foreach (var room in HotelRooms)
+                    {
+                        <tr>
+                            <td>@room.Name</td>
+                            <td>@room.Occupancy</td>
+                            <td>@room.RegularRate.ToString("c")</td>
+                            <td>@room.SqFt</td>
+                            <td>
+                                <NavLink href="@($"hotel-room/edit/{room.Id}")" class="btn btn-primary">Edit</NavLink>
+                                <button class="btn btn-danger" @onclick="()=> HandleDelete(room.Id)">Delete</button>
+                            </td>
+
+
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5">No Records Found</td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<DeleteConfirmation IsParentComponentProcessing="IsProcessing" ConfrmationChanged="ConfirmDelete_Click"></DeleteConfirmation>
+
+@code {
+    private IEnumerable<HotelRoomDTO> HotelRooms { get; set; } = new List<HotelRoomDTO>();
+    private int? DeleteRoomID { get; set; } = null;
+    private bool IsProcessing { get; set; } = false;
+
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationState { get; set; }
+
+
+    protected async override Task OnInitializedAsync()
+    {
+       
+        HotelRooms = await HotelRoomRepositroy.GetAllHotelRoom();
+
+    }
+
+    private async Task HandleDelete(int roomId)
+    {
+        DeleteRoomID = roomId;
+        await jsRuntime.InvokeVoidAsync("ShowDeleteConfirmationModal");
+    }
+
+
+    public async Task ConfirmDelete_Click(bool isConfirmed)
+    {
+        IsProcessing = true;
+        if (isConfirmed && DeleteRoomID != null)
+        {
+            HotelRoomDTO hotelroom = await HotelRoomRepositroy.GetHotelRoom(DeleteRoomID.Value);
+            foreach (var image in hotelroom.HotelRoomImages)
+            {
+                var imageName = image.RoomImageUrl.Replace($"{Nav.BaseUri}RoomImages/", "");
+                FileUpload.DeleteFile(imageName);
+            }
+
+            await HotelRoomRepositroy.DeleteHotelRoom(DeleteRoomID.Value);
+            await jsRuntime.ToasterSuccess("Hotel Room Deleted Successfuly");
+            HotelRooms = await HotelRoomRepositroy.GetAllHotelRoom();
+        }
+        await jsRuntime.InvokeVoidAsync("HideDeleteConfirmationModal");
+        IsProcessing = false;
+    }
+}

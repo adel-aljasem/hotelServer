@@ -1,0 +1,82 @@
+﻿@page "/amenity"
+@using Models
+@using Business.Repository.IRepository
+@inject IAmenitRepository AmenityRespository
+@inject IJSRuntime JsRuntime
+@attribute [Authorize(Roles = Common.SD.Role_Admin)]
+
+
+
+<div class="row mt-4">
+    <div class="col-8">
+        <h4 class="card-title text-info">Amenity</h4>
+    </div>
+    <div class="col-3 offset-1">
+        <NavLink href="amenity/create" class="btn btn-info form-control">Add new amenity</NavLink>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Timming</th>
+                    <th>Icon</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (AmenityDTO.Any())
+                {
+                    foreach (var amenity in AmenityDTO)
+                    {
+                        <tr>
+                            <td>@amenity.Name</td>
+                            <td>@amenity.Timming</td>
+                            <td><i class="@amenity.Icon"></i></td>
+
+                            <td>
+                                <NavLink href="@($"amenity/edit/{amenity.Id}")" class="btn btn-primary">Edit</NavLink>
+                                <button @onclick="()=> HandleDelete(amenity.Id)" class="btn btn-danger">Delete</button>
+                            </td>
+
+
+
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<DeleteConfirmation ConfrmationChanged="ConfirmDelete_Click"></DeleteConfirmation>
+@code {
+    public IEnumerable<AmenityDTO> AmenityDTO { get; set; } = new List<AmenityDTO>();
+    public int? DeletedRoomId { get; set; } = null;
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        AmenityDTO = await AmenityRespository.GetAllAmenity();
+    }
+
+    private async Task HandleDelete(int roomId)
+    {
+        DeletedRoomId = roomId;
+        await JsRuntime.InvokeVoidAsync("ShowDeleteConfirmationModal");
+    }
+
+    public async Task ConfirmDelete_Click(bool isConfirmed)
+    {
+        if (isConfirmed && DeletedRoomId != null)
+        {
+            await AmenityRespository.DeleteAmenity(DeletedRoomId.Value);
+            await JsRuntime.ToasterSuccess("Deleted Successfuly");
+            AmenityDTO = await AmenityRespository.GetAllAmenity();
+        }
+        await JsRuntime.InvokeVoidAsync("HideDeleteConfirmationModal");
+    }
+
+}

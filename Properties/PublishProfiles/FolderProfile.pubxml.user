@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\Hotel\Hotel\bin\Release\net5.0\publish\</_PublishTargetUrl>
+    <History>True|2021-05-07T20:26:04.0385876Z;True|2021-05-07T07:51:01.9584964+03:00;True|2021-05-07T06:09:55.9708996+03:00;</History>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+  </PropertyGroup>
+  <ItemGroup>
+    <DestinationConnectionStrings Include="DefualtConnection">
+      <Value>Server=192.168.1.60%3bDatabase=Hotel%3bUser Id=sa%3bPassword=Aadel123456%3bMultipleActiveResultSets=True</Value>
+    </DestinationConnectionStrings>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,47 @@
+﻿@inject NavigationManager nav
+
+@if (NotAuthorized)
+{
+    <div>
+        <strong>لايوجد لديك صلاحية الوصول لهذه الصفحة </strong>
+    </div>
+}
+
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> authenticationState { get; set; }
+
+    private bool NotAuthorized { get; set; } = false;
+
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        var auth = await authenticationState;
+
+        if (auth?.User?.Identity == null || !auth.User.Identity.IsAuthenticated)
+        {
+
+            //var returnUrl = Nav.ToBaseRelativePath(Nav.Uri);
+            var uri = new Uri(nav.Uri);
+
+            if (string.IsNullOrEmpty(uri.ToString()))
+            {
+                nav.NavigateTo("login", true);
+            }
+            else
+            {
+                nav.NavigateTo($"/identity/account/login?returnUrl={uri.LocalPath}", true);
+            }
+
+            //Nav.NavigateTo($"/identity/account/login?returnUrl={uri.LocalPath}");
+        }
+        else
+        {
+            NotAuthorized = true;
+        }
+    }
+
+
+}
